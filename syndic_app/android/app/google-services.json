@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "492977651430",
+    "project_id": "syndic-app-4b349",
+    "storage_bucket": "syndic-app-4b349.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:492977651430:android:58aea6b01269b8ed894527",
+        "android_client_info": {
+          "package_name": "com.example.syndic_app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBwCBznYJ-3DhXkUX8bfeuZsyerFm24VSg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
