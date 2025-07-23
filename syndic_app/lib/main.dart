@@ -1,21 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:syndic_app/screens/login_screen.dart';
+import 'core/theme.dart';
+import 'features/auth/login_screen.dart';
+import 'firebase_options.dart'; // généré par FlutterFire CLI
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
-  runApp(const MyApp());
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const SyndicApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class SyndicApp extends StatelessWidget {
+  const SyndicApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       title: 'Syndic App',
-      theme: ThemeData(primarySwatch: Colors.blue),
+      theme: AppTheme.lightTheme,
       home: const LoginScreen(),
     );
   }
