@@ -1,5 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:syndic_app/core/services/user_service.dart';
+import 'package:syndic_app/features/auth/forgot_password_screen.dart';
 import '../../core/services/auth_service.dart';
 import '../dashboard/dashboard_screen.dart';
 import 'signup_screen.dart';
@@ -27,14 +29,27 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => isLoading = true);
 
     try {
-      await _authService.login(
-        emailController.text.trim(),
-        passwordController.text.trim(),
-      );
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
-      );
+final userCredential = await _authService.login(
+  emailController.text.trim(),
+  passwordController.text.trim(),
+);
+
+final uid = userCredential.user!.uid;
+final userService = UserService();
+final role = await userService.getUserRole(uid);
+
+if (role == 'superadmin') {
+  Navigator.pushReplacementNamed(context, '/dashboardSuperAdmin');
+} else if (role == 'syndic') {
+  Navigator.pushReplacementNamed(context, '/dashboardSyndic');
+} else if (role == 'responsable') {
+  Navigator.pushReplacementNamed(context, '/dashboardResponsable');
+} else {
+  ScaffoldMessenger.of(context).showSnackBar(
+    const SnackBar(content: Text('Rôle inconnu, accès refusé')),
+  );
+}
+
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message ?? "Erreur de connexion")),
@@ -51,6 +66,7 @@ class _LoginScreenState extends State<LoginScreen> {
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               const SizedBox(height: 50),
               Image.asset('assets/images/login.png', height: 120),
@@ -89,6 +105,17 @@ class _LoginScreenState extends State<LoginScreen> {
                 },
                 child: const Text("Créer un compte"),
               ),
+              TextButton(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ForgotPasswordScreen()),
+                  );
+                },
+                child: const Text("Mot de passe oublié ?"),
+              ),
+              
+
             ],
           ),
         ),

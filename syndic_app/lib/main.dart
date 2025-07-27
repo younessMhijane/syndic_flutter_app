@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:syndic_app/features/auth/auth_gate.dart';
 import 'core/theme.dart';
 import 'features/auth/login_screen.dart';
 import 'firebase_options.dart'; // généré par FlutterFire CLI
@@ -21,7 +22,7 @@ class SyndicApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Syndic App',
       theme: AppTheme.lightTheme,
-      home: const LoginScreen(),
+      home: const AuthGate(),
     );
   }
 }

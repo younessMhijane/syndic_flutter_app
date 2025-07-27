@@ -12,54 +12,67 @@ class SignupScreen extends StatefulWidget {
 class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController emailController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
+  final TextEditingController fullNameController = TextEditingController();
+  final TextEditingController phoneController = TextEditingController();
+
   bool isLoading = false;
   bool obscurePassword = true; // 👁 Pour afficher/cacher mot de passe
   final AuthService _authService = AuthService();
 
-  void signup() async {
-    final email = emailController.text.trim();
-    final password = passwordController.text.trim();
+void signup() async {
+  final email = emailController.text.trim();
+  final password = passwordController.text.trim();
+  final fullName = fullNameController.text.trim();
+  final phone = phoneController.text.trim();
 
-    if (email.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Veuillez remplir tous les champs")),
-      );
-      return;
-    }
-
-    if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(email)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Veuillez entrer un email valide")),
-      );
-      return;
-    }
-
-    if (password.length < 6) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Le mot de passe doit contenir au moins 6 caractères")),
-      );
-      return;
-    }
-
-    setState(() => isLoading = true);
-
-    try {
-      await _authService.signup(email, password);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          backgroundColor: Colors.redAccent,
-          content: Text(e.toString()),
-        ),
-      );
-    } finally {
-      setState(() => isLoading = false);
-    }
+  if (email.isEmpty || password.isEmpty || fullName.isEmpty || phone.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Veuillez remplir tous les champs")),
+    );
+    return;
   }
+
+  if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w]{2,4}').hasMatch(email)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Veuillez entrer un email valide")),
+    );
+    return;
+  }
+
+  if (password.length < 6) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Le mot de passe doit contenir au moins 6 caractères")),
+    );
+    return;
+  }
+
+  setState(() => isLoading = true);
+
+  try {
+    await _authService.signup(
+      email: email,
+      password: password,
+      fullName: fullName,
+      phone: phone,
+      isSuperAdmin: false, // 👈 ou true si tu veux créer l’admin ici
+    );
+
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: Colors.redAccent,
+        content: Text(e.toString()),
+      ),
+    );
+  } finally {
+    setState(() => isLoading = false);
+  }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -91,11 +104,34 @@ class _SignupScreenState extends State<SignupScreen> {
               ),
               const SizedBox(height: 32),
               TextField(
+                controller: fullNameController,
+                decoration: InputDecoration(
+                  labelText: 'Nom complet',
+                  prefixIcon: const Icon(Icons.person_outline),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
                 controller: emailController,
                 keyboardType: TextInputType.emailAddress,
                 decoration: InputDecoration(
                   labelText: 'Email',
                   prefixIcon: const Icon(Icons.email_outlined),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: phoneController,
+                keyboardType: TextInputType.phone,
+                decoration: InputDecoration(
+                  labelText: 'Téléphone',
+                  prefixIcon: const Icon(Icons.phone_outlined),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
