@@ -3,8 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:syndic_app/core/services/user_service.dart';
 import 'package:syndic_app/features/auth/forgot_password_screen.dart';
 import '../../core/services/auth_service.dart';
-import '../dashboard/dashboard_screen.dart';
-import 'signup_screen.dart';
+
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -95,15 +94,6 @@ if (role == 'superadmin') {
                 child: isLoading
                     ? const CircularProgressIndicator(color: Colors.white)
                     : const Text("Connexion"),
-              ),
-              TextButton(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const SignupScreen()),
-                  );
-                },
-                child: const Text("Créer un compte"),
               ),
               TextButton(
                 onPressed: () {

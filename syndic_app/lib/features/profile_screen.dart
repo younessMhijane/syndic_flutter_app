@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:syndic_app/core/services/cloudinary_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -20,6 +20,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String fullName = '';
   String phone = '';
   String role = '';
+  String nbAppartActifs = '';
+  String immeubleNom = '';
   String email = '';
   String imageUrl = '';
   File? _newImage;
@@ -33,17 +35,25 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> fetchUserData() async {
-    final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-    if (doc.exists) {
-      final data = doc.data()!;
-      setState(() {
-        fullName = data['fullName'] ?? '';
-        phone = data['phone'] ?? '';
-        role = data['role'] ?? '';
-        email = data['email'] ?? user.email!;
-        imageUrl = data['photoUrl'] ?? '';
-        isLoading = false;
-      });
+    try {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final data = doc.data()!;
+        setState(() {
+          fullName = data['fullName']?.toString() ?? '';
+          phone = data['phone']?.toString() ?? '';
+          role = data['role']?.toString() ?? '';
+          // Handle both int and String cases for nbAppartActifs
+          nbAppartActifs = data['nbAppartActifs']?.toString() ?? '';
+          immeubleNom = data['immeubleNom']?.toString() ?? '';
+          email = data['email']?.toString() ?? user.email ?? '';
+          imageUrl = data['photoUrl']?.toString() ?? '';
+          isLoading = false;
+        });
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+      setState(() => isLoading = false);
     }
   }
 
@@ -57,27 +67,37 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
-  Future<String> uploadProfileImage(File file) async {
-    final storageRef = FirebaseStorage.instance.ref().child('profile_pictures/${user.uid}.jpg');
-    await storageRef.putFile(file);
-    return await storageRef.getDownloadURL();
-  }
-
   Future<void> saveChanges() async {
     if (_formKey.currentState!.validate()) {
-      String newPhotoUrl = imageUrl;
+      try {
+        String newPhotoUrl = imageUrl;
 
-      if (_newImage != null) {
-        newPhotoUrl = await uploadProfileImage(_newImage!);
+        if (_newImage != null) {
+          final uploadedUrl = await CloudinaryService.uploadImage(_newImage!);
+          if (uploadedUrl != null) {
+            newPhotoUrl = uploadedUrl;
+          }
+        }
+
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
+          'fullName': fullName,
+          'phone': phone,
+          'photoUrl': newPhotoUrl,
+          'nbAppartActifs': nbAppartActifs.isNotEmpty ? int.tryParse(nbAppartActifs) ?? 0 : 0,
+        });
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text("Profil mis à jour.")),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Erreur lors de la mise à jour: ${e.toString()}")),
+          );
+        }
       }
-
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).update({
-        'fullName': fullName,
-        'phone': phone,
-        'photoUrl': newPhotoUrl,
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Profil mis à jour.")));
     }
   }
 
@@ -120,6 +140,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: const InputDecoration(labelText: 'Téléphone'),
                 onChanged: (val) => setState(() => phone = val),
               ),
+              const SizedBox(height: 10),
+              if (role == "syndic")
+                TextFormField(
+                  initialValue: nbAppartActifs,
+                  decoration: const InputDecoration(labelText: 'Nombre d\'appartements actifs'),
+                  keyboardType: TextInputType.number,
+                  onChanged: (val) => setState(() => nbAppartActifs = val),
+                ),
+              if (role == "syndic")
+                TextFormField(
+                  initialValue: immeubleNom,
+                  decoration: const InputDecoration(labelText: 'Nom de l\'immeuble'),
+                  enabled: false,
+                ),
               const SizedBox(height: 10),
               TextFormField(
                 initialValue: email,
